@@ -80,14 +80,14 @@ class MapSource(object):
                          max_zoom=max_zoom, url=url, attribution=attribution,
                          **options)
 
-    def get_x(self, zoom, lon):
+    def get_x(self, int zoom, float lon):
         """Get the x position on the map using this map source's projection
         (0, 0) is located at the top left.
         """
         lon = clamp(lon, MIN_LONGITUDE, MAX_LONGITUDE)
         return ((lon + 180.) / 360. * pow(2., zoom)) * self.dp_tile_size
 
-    def get_y(self, zoom, lat):
+    def get_y(self, int zoom, float lat):
         """Get the y position on the map using this map source's projection
         (0, 0) is located at the top left.
         """
@@ -96,29 +96,31 @@ class MapSource(object):
         return ((1.0 - log(tan(lat) + 1.0 / cos(lat)) / pi) / \
             2. * pow(2., zoom)) * self.dp_tile_size
 
-    def get_lon(self, zoom, x):
+    def get_lon(self, int zoom, float x):
         """Get the longitude to the x position in the map source's projection
         """
+        cdef float dx
         dx = x / float(self.dp_tile_size)
         lon = dx / pow(2., zoom) * 360. - 180.
         return clamp(lon, MIN_LONGITUDE, MAX_LONGITUDE)
 
-    def get_lat(self, zoom, y):
+    def get_lat(self, int zoom, float y):
         """Get the latitude to the y position in the map source's projection
         """
+        cdef float dy,n
         dy = y / float(self.dp_tile_size)
         n = pi - 2 * pi * dy / pow(2., zoom)
         lat = -180. / pi * atan(.5 * (exp(n) - exp(-n)))
         return clamp(lat, MIN_LATITUDE, MAX_LATITUDE)
 
-    def get_row_count(self, zoom):
+    def get_row_count(self, int zoom):
         """Get the number of tiles in a row at this zoom level
         """
         if zoom == 0:
             return 1
         return 2 << (zoom - 1)
 
-    def get_col_count(self, zoom):
+    def get_col_count(self, int zoom):
         """Get the number of tiles in a col at this zoom level
         """
         if zoom == 0:

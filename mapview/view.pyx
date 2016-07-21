@@ -18,6 +18,7 @@ from kivy.compat import string_types
 from math import ceil
 from mapview import MIN_LONGITUDE, MAX_LONGITUDE, MIN_LATITUDE, MAX_LATITUDE, \
     CACHE_DIR, Coordinate, Bbox
+from mapview import downloader
 from mapview.source import MapSource
 from mapview.utils import clamp
 
@@ -116,7 +117,7 @@ class MapMarker(ButtonBehavior, Image):
     """Longitude of the marker
     """
 
-    source = StringProperty(join(dirname(__file__), "icons", "marker.png"))
+    source = StringProperty(join(dirname(downloader.__file__), "icons", "marker.png"))
     """Source of the marker, defaults to our own marker.png
     """
 
@@ -322,9 +323,10 @@ class MapView(Widget):
         """
         self.remove_all_tiles()
 
-    def get_window_xy_from(self, lat, lon, zoom):
+    def get_window_xy_from(self,float lat, float lon,int zoom):
         """Returns the x/y position in the widget absolute coordinates
         from a lat/lon"""
+        cdef float x,y,scale,vx,vy
         scale = self.scale
         vx, vy = self.viewport_pos
         ms = self.map_source

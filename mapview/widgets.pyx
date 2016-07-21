@@ -1,11 +1,10 @@
 # coding=utf-8
-
 '''
 Created on May 12, 2016
 
 @author: jrm
 '''
-from kivy.garden.mapview import MarkerMapLayer
+from mapview import MarkerMapLayer
 from kivy.graphics import Line,Color,Mesh
 from kivy.graphics.tesselator import Tesselator
 from kivy.properties import NumericProperty,BooleanProperty, ObjectProperty, ListProperty
@@ -109,7 +108,7 @@ class MapLine(MapLayerWidget,CollisionDetector):
                 return True
         return False
     
-    def get_px_from_zoom(self,d):
+    def get_px_from_zoom(self,float d):
         """ Get width in px of distance in meters"""
         return d*(2**(self.map.zoom+self.map._scale-1))/156412.0
         
@@ -117,7 +116,7 @@ class MapLine(MapLayerWidget,CollisionDetector):
         """ Redraw the line on the canvas """
         if not self.coordinates:
             return
-        xydata = [p for p in self._generate_points()]
+        xydata = self._generate_points()
         n = len(self.coordinates)
         with self.canvas:
             self.canvas.clear()
@@ -136,22 +135,18 @@ class MapLine(MapLayerWidget,CollisionDetector):
     def _generate_points(self):
         """ Generate all the points based on lat & long of the coordinates """
         zoom = self.map.zoom
+        points = []
         for i,c in enumerate(self.coordinates):
             x,y = self.map.get_window_xy_from(c.lat,c.lon,zoom)
             if i==0 and self.closed:
                 x0,y0=x,y
-            yield x
-            yield y
+            points +=[x,y]
         if self.closed:
-            yield x0
-            yield y0
+            points += [x0,y0]
+        return points
     
     def on_collision(self,*args):
         """ When the layer is repositioned, redraw """
-        self.update_line()
-    
-    def on_pos(self,*args):
-        """ When the map position moves, redraw """
         self.update_line()
     
     def on_coordinates(self,*args):
