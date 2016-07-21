@@ -1,5 +1,11 @@
 from setuptools import setup, Extension
-#from Cython.Build import cythonize
+
+try:
+    from Cython.Build import cythonize
+    has_cython = True
+except:
+    has_cython = False
+
 extensions = [
     Extension("mapview.source", ["mapview/source.pyx"]),
     Extension("mapview.types", ["mapview/types.pyx"]),
@@ -7,8 +13,13 @@ extensions = [
     Extension("mapview.view", ["mapview/view.pyx"]),
     Extension("mapview.widgets", ["mapview/widgets.pyx"]),
 ]
+
+if has_cython:
+    extensions = cythonize(extensions)
+
 setup(
     name = 'Cythonized MapView',
     packages = ['mapview'],
-    ext_modules = extensions#cythonize("mapview/*.pyx")
+    data_files = [('icons', ['icons/marker.png'])],
+    ext_modules = extensions
 )

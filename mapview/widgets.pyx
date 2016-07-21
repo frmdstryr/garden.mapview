@@ -11,10 +11,7 @@ from kivy.properties import NumericProperty,BooleanProperty, ObjectProperty, Lis
 from kivy.uix.widget import Widget
 
 
-class CollisionDetector(object):
-    """ Interface used to detect if a widget should be displayed
-        on the map.
-    """
+class CollisionDetectorBehavior(object):
     def collides_with(self,bbox):
         """ Check if this object is within the bbox """
         raise NotImplementedError
@@ -23,22 +20,18 @@ class CollisionDetector(object):
         pass
 
 class CanvasMapLayer(MarkerMapLayer):
-    """ Map layer that uses the collision detector interface to check the 
-        widget visibility so map widgets don't disappear if part of the widget is
-        still visible. 
-    """
-    
+    """ Supports widget visibility so marker widgets don't disappear if they
+    should still be visible. """
     def reposition(self):
         if not self.markers:
             return
         mapview = self.parent
-        bbox = None
         # reposition the markers depending the latitude
         markers = sorted(self.markers, key=lambda x: -x.lat)
         margin = max((max(marker.size) for marker in markers))
         bbox = mapview.get_bbox(margin)
         for marker in markers:
-            can_detect_collision = isinstance(marker, CollisionDetector)
+            can_detect_collision = isinstance(marker, CollisionDetectorBehavior)
             if bbox.collide(marker.lat, marker.lon) or \
                 (can_detect_collision and marker.collides_with(bbox)):
                 self.set_marker_position(mapview, marker)
@@ -48,6 +41,7 @@ class CanvasMapLayer(MarkerMapLayer):
                     marker.on_collision()
             else:
                 super(MarkerMapLayer, self).remove_widget(marker) 
+
 
 class MapLayerWidget(Widget):
     """ Generic Widget on map """
@@ -78,7 +72,7 @@ class MapLayerWidget(Widget):
             self._layer.remove_widget(self)
             self._layer = None
 
-class MapLine(MapLayerWidget,CollisionDetector):
+class MapLine(MapLayerWidget,CollisionDetectorBehavior):
     # Width of the line in meters
     width = NumericProperty(30)
     
