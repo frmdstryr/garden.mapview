@@ -91,7 +91,10 @@ class Tile(Rectangle):
         return join(CACHE_DIR, fn)
 
     def set_source(self, cache_fn):
-        self.source = cache_fn
+        try:
+            self.source = cache_fn
+        except Exception as e:
+            print(e) # Bad...
         self.state = "need-animation"
 
 
