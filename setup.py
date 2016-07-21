@@ -1,8 +1,8 @@
 from setuptools import setup, Extension
-from Cython.Build import cythonize
-
+#from Cython.Build import cythonize
+extensions = [Extension("*", ["mapview/*.pyx"])]
 setup(
     name = 'Cythonized MapView',
     packages = ['mapview'],
-    ext_modules = cythonize("mapview/*.pyx")
+    ext_modules = extensions#cythonize("mapview/*.pyx")
 )
