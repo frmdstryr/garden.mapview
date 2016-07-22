@@ -20,6 +20,8 @@ if has_cython:
 setup(
     name = 'Cythonized MapView',
     packages = ['mapview'],
-    data_files = [('icons', ['icons/marker.png'])],
+    package_data={
+       'mapview': ['icons/*.png'],
+    },
     ext_modules = extensions
 )
