@@ -9,12 +9,21 @@ from mapview import CACHE_DIR
 from urlparse import urlparse
 
 from twisted.python import log
-from twisted.internet import reactor,defer
+from twisted.internet import reactor,defer, ssl
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.protocol import Protocol
-from twisted.web.client import Agent, ProxyAgent, HTTPConnectionPool
+from OpenSSL import SSL
+from twisted.web.client import Agent, ProxyAgent, HTTPConnectionPool, BrowserLikePolicyForHTTPS
 
+
+class MyPolicy(BrowserLikePolicyForHTTPS):
+    def creatorForNetloc(self, hostname, port):
+        return ssl.optionsForClientTLS(
+            hostname.decode("ascii"),
+            extraCertificateOptions={'method': SSL.SSLv3_METHOD},
+            trustRoot=self._trustRoot
+        )
 
 class Downloader(object):
     """ Downloader that uses twisted's web client
