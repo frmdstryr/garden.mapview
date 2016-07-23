@@ -3,66 +3,56 @@ __all__ = ["Downloader"]
 
 import os
 from os.path import exists
-from os import makedirs
 from random import choice
-from mapview import CACHE_DIR
 from urlparse import urlparse
+
+from mapview.downloader import Downloader
 
 from twisted.python import log
 from twisted.internet import reactor,defer, ssl
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.protocol import Protocol
-from OpenSSL import SSL
 from twisted.web.client import Agent, ProxyAgent, HTTPConnectionPool, BrowserLikePolicyForHTTPS
 
+try:
+    # To add support for HTTPS
+    from OpenSSL import SSL
+    
+    class SSLPolicy(BrowserLikePolicyForHTTPS):
+        def creatorForNetloc(self, hostname, port):
+            return ssl.optionsForClientTLS(
+                hostname.decode("ascii"),
+                extraCertificateOptions={'method': SSL.SSLv3_METHOD},
+                trustRoot=self._trustRoot
+            )
+    
+    has_ssl = True
+except ImportError:
+    has_ssl = False
 
-class MyPolicy(BrowserLikePolicyForHTTPS):
-    def creatorForNetloc(self, hostname, port):
-        return ssl.optionsForClientTLS(
-            hostname.decode("ascii"),
-            extraCertificateOptions={'method': SSL.SSLv3_METHOD},
-            trustRoot=self._trustRoot
-        )
 
-class Downloader(object):
+class AsyncDownloader(Downloader):
     """ Downloader that uses twisted's web client
         instead of threads.  
         
         Note: Currently does NOT support using HTTPS through a proxy!
     
     """
-    _instance = None
-    MAX_WORKERS = 5
-    CAP_TIME = 0.064  # 15 FPS
-
-    @staticmethod
-    def instance():
-        if Downloader._instance is None:
-            Downloader._instance = Downloader()
-        return Downloader._instance
-
-    def __init__(self, max_workers=None, cap_time=None):
-        if max_workers is None:
-            max_workers = Downloader.MAX_WORKERS
-        if cap_time is None:
-            cap_time = Downloader.CAP_TIME
-        super(Downloader, self).__init__()
-        self.is_paused = False
-        self.cap_time = cap_time
-        
+    def setup(self):
         pool = HTTPConnectionPool(reactor, persistent=True)
-        pool.maxPersistentPerHost = max_workers
+        pool.maxPersistentPerHost = self.max_workers
+        
+        # Set SSL Policy
+        policy = SSLPolicy if has_ssl else BrowserLikePolicyForHTTPS
         
         if 'HTTP_PROXY' in os.environ:
             proxy = urlparse(os.environ['HTTP_PROXY'])
             endpoint = TCP4ClientEndpoint(reactor, proxy.hostname, proxy.port or 8080)
-            self.agent = ProxyAgent(endpoint,pool=pool)
+            self.agent = ProxyAgent(endpoint,pool=pool,contextFactory=policy)
+        # TODO: Support proxy and HTTPS
         else:
-            self.agent = Agent(reactor,pool=pool)
-        
-        if not exists(CACHE_DIR):
-            makedirs(CACHE_DIR)
+            self.agent = Agent(reactor,pool=pool,contextFactory=policy)
 
     def submit(self, f, *args, **kwargs):
         reactor.callInThread(f,*args,**kwargs)
