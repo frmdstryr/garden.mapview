@@ -9,7 +9,7 @@ from urlparse import urlparse
 from mapview.downloader import Downloader
 
 from twisted.python import log
-from twisted.internet import reactor,defer, ssl
+from twisted.internet import reactor,defer
 from twisted.internet.defer import Deferred, inlineCallbacks
 from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.protocol import Protocol
@@ -18,6 +18,7 @@ from twisted.web.client import Agent, ProxyAgent, HTTPConnectionPool, BrowserLik
 try:
     # To add support for HTTPS
     from OpenSSL import SSL
+    from twisted.internet import ssl
     
     class SSLPolicy(BrowserLikePolicyForHTTPS):
         def creatorForNetloc(self, hostname, port):
