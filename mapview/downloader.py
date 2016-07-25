@@ -54,12 +54,12 @@ try:
     
     # Set factory
     Downloader.factory = ThreadedDownloader
-except ImportError:
-    pass
+except ImportError as e:
+    print(e)
 
 try:
     from mapview.downloaders.async import AsyncDownloader    
     # Set twisted as default    
     Downloader.factory = AsyncDownloader
-except ImportError:
-    pass
+except ImportError as e:
+    print(e)

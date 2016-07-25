@@ -121,10 +121,12 @@ class MapLine(MapLayerWidget,CollisionDetectorBehavior):
             if self.type=='line':
                 Line(points=xydata,
                      width=self.get_px_from_zoom(self.width),
+                     close=self.closed,
                      cap='square',joint='round')
             else:
                 SmoothLine(points=xydata,
                      width=self.get_px_from_zoom(self.width),
+                     close=self.closed,
                      cap='square',joint='round')
                 
             if self.fill and n>2:
@@ -139,13 +141,8 @@ class MapLine(MapLayerWidget,CollisionDetectorBehavior):
         """ Generate all the points based on lat & long of the coordinates """
         zoom = self.map.zoom
         points = []
-        for i,c in enumerate(self.coordinates):
-            x,y = self.map.get_window_xy_from(c.lat,c.lon,zoom)
-            if i==0 and self.closed:
-                x0,y0=x,y
-            points +=[x,y]
-        if self.closed:
-            points += [x0,y0]
+        for c in self.coordinates:
+            points += self.map.get_window_xy_from(c.lat,c.lon,zoom)
         return points
     
     def on_collision(self,*args):

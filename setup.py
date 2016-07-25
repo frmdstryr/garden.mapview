@@ -19,7 +19,7 @@ if has_cython:
 
 setup(
     name = 'Cythonized MapView',
-    packages = ['mapview'],
+    packages = ['mapview','mapview.downloaders'],
     package_data={
        'mapview': ['icons/*.png'],
     },
