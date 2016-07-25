@@ -50,7 +50,7 @@ class Downloader(object):
         raise NotImplementedError
     
 try:
-    from downloaders.threaded import ThreadedDownloader
+    from mapview.downloaders.threaded import ThreadedDownloader
     
     # Set factory
     Downloader.factory = ThreadedDownloader
@@ -58,7 +58,7 @@ except ImportError:
     pass
 
 try:
-    from mapview.downloaders import AsyncDownloader    
+    from mapview.downloaders.async import AsyncDownloader    
     # Set twisted as default    
     Downloader.factory = AsyncDownloader
 except ImportError:

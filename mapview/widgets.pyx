@@ -5,9 +5,9 @@ Created on May 12, 2016
 @author: jrm
 '''
 from mapview import MarkerMapLayer
-from kivy.graphics import Line,Color,Mesh
+from kivy.graphics import SmoothLine,Line,Color,Mesh
 from kivy.graphics.tesselator import Tesselator
-from kivy.properties import NumericProperty,BooleanProperty, ObjectProperty, ListProperty
+from kivy.properties import NumericProperty,BooleanProperty, ObjectProperty, ListProperty, OptionProperty
 from kivy.uix.widget import Widget
 
 
@@ -85,6 +85,9 @@ class MapLine(MapLayerWidget,CollisionDetectorBehavior):
     # If the area should be filled
     fill = BooleanProperty(False)
     
+    # If the area should be filled
+    type = OptionProperty('line',options=['line','smoothline'])
+    
     # Fill color
     fill_color = ListProperty([0,1,0,0.2])
     
@@ -115,9 +118,15 @@ class MapLine(MapLayerWidget,CollisionDetectorBehavior):
         with self.canvas:
             self.canvas.clear()
             Color(*self.color)
-            Line(points=xydata,
-                 width=self.get_px_from_zoom(self.width),
-                 cap='square',joint='round')
+            if self.type=='line':
+                Line(points=xydata,
+                     width=self.get_px_from_zoom(self.width),
+                     cap='square',joint='round')
+            else:
+                SmoothLine(points=xydata,
+                     width=self.get_px_from_zoom(self.width),
+                     cap='square',joint='round')
+                
             if self.fill and n>2:
                 t = Tesselator()
                 t.add_contour(xydata)
