@@ -543,7 +543,8 @@ class MapView(Widget):
         if isinstance(widget, MapMarker):
             self.add_marker(widget)
         elif isinstance(widget, MapLayer):
-            self.add_layer(widget)
+            mode = widget.mode if hasattr(widget,'mode') else 'window'
+            self.add_layer(widget,mode)
         else:
             super(MapView, self).add_widget(widget)
 

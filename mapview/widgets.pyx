@@ -7,9 +7,9 @@ Created on May 12, 2016
 from mapview import MarkerMapLayer
 from kivy.graphics import SmoothLine,Line,Color,Mesh
 from kivy.graphics.tesselator import Tesselator
+from kivy.graphics.context_instructions import Scale, Translate
 from kivy.properties import NumericProperty,BooleanProperty, ObjectProperty, ListProperty, OptionProperty
 from kivy.uix.widget import Widget
-
 
 class CollisionDetectorBehavior(object):
     def collides_with(self,bbox):
@@ -22,10 +22,24 @@ class CollisionDetectorBehavior(object):
 class CanvasMapLayer(MarkerMapLayer):
     """ Supports widget visibility so marker widgets don't disappear if they
     should still be visible. """
+    
+    _size = ObjectProperty(None)
+    _zoom =  NumericProperty(0)
+    
+    mode = OptionProperty('scatter',options=['scatter','window'])
+    
     def reposition(self):
         if not self.markers:
             return
         mapview = self.parent
+        print "repos {} {}".format(mapview.pos,mapview.size)
+        if (mapview.zoom == self._zoom):# and (mapview.size == self._size):
+            # Only redraw when zoom changes or map is repositioned
+            return
+        print "zoom changed bro {}".format(self)
+        self._size = mapview.size
+        self._zoom = mapview.zoom
+        
         # reposition the markers depending the latitude
         markers = sorted(self.markers, key=lambda x: -x.lat)
         margin = max((max(marker.size) for marker in markers))
@@ -109,14 +123,23 @@ class MapLine(MapLayerWidget,CollisionDetectorBehavior):
         """ Get width in px of distance in meters"""
         return d*(2**(self.map.zoom+self.map._scale-1))/156412.0
         
-    def update_line(self):
+    def update_line(self,reposition=False):
         """ Redraw the line on the canvas """
         if not self.coordinates:
             return
+        print "update line {}".format(self)
+        scatter = self.map._scatter
+        x,y,s = scatter.x, scatter.y, scatter.scale
         xydata = self._generate_points()
         n = len(self.coordinates)
+        print n, x, y, s, reposition
         with self.canvas:
             self.canvas.clear()
+            
+            if reposition:
+                Scale(1/s,1/s,1)
+                Translate(-x,-y)
+            
             Color(*self.color)
             if self.type=='line':
                 Line(points=xydata,
@@ -145,11 +168,20 @@ class MapLine(MapLayerWidget,CollisionDetectorBehavior):
             points += self.map.get_window_xy_from(c.lat,c.lon,zoom)
         return points
     
+    def on_size(self,*args):
+        super(MapLine, self).on_size(*args)
+        print "on size {}".format(self.size)
+    
+    def on_pos(self,*args):
+        print "on posi {}".format(self.pos)
+    
     def on_collision(self,*args):
         """ When the layer is repositioned, redraw """
-        self.update_line()
+        print "on collish"
+        self.update_line(reposition=True)
     
     def on_coordinates(self,*args):
         """ When the coordinates are changed, redraw """
+        print "on coords"
         self.update_line()
     
